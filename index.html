@@ -46,6 +46,7 @@
       width: 100%;
       border-radius: 6px;
       transition: transform 0.5s ease;
+      cursor: zoom-in;
     }
 
     .card h3 {
@@ -73,7 +74,6 @@
       min-width: 250px;
     }
 
-    /* アニメーション */
     .slide-left {
       animation: slideLeft 0.4s ease forwards;
     }
@@ -92,7 +92,6 @@
       100% { transform: translateX(100%); opacity: 0; }
     }
 
-    /* SVG矢印 */
     .arrow {
       position: absolute;
       top: 50%;
@@ -117,6 +116,37 @@
       right: 10px;
       display: none;
     }
+
+    /* モーダル拡大用 */
+    #modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.8);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #modal img {
+      max-width: 90%;
+      max-height: 80vh;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    #modal .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      font-size: 30px;
+      color: #fff;
+      cursor: pointer;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -140,6 +170,12 @@
         <p>表・裏のバランスを重視し、単体でも組み合わせでも映えるデザイン設計</p>
       </div>
     </div>
+  </div>
+
+  <!-- モーダル表示 -->
+  <div id="modal" onclick="closeModal()">
+    <span class="close-btn" onclick="closeModal(event)">&times;</span>
+    <img id="modalImg" src="" alt="拡大画像" />
   </div>
 
   <script>
@@ -178,7 +214,7 @@
       card.dataset.state = "back";
 
       card.innerHTML = `
-        <img src="${item.back}" alt="${item.title}" />
+        <img src="${item.back}" alt="${item.title}" onclick="openModal(this.src)" />
         <h3>${item.title}（裏面）</h3>
         <p>${item.description}</p>
         <div class="arrow left" onclick="toggleCard(this.parentElement, ${JSON.stringify(item)}, 'right')">
@@ -210,7 +246,7 @@
       });
 
       designsContainer.appendChild(card);
-      updateArrows(card); // 初期状態で矢印表示
+      updateArrows(card);
     });
 
     function toggleCard(card, data, direction) {
@@ -247,6 +283,19 @@
       const right = card.querySelector(".arrow.right");
       left.style.display = isBack ? "none" : "block";
       right.style.display = isBack ? "block" : "none";
+    }
+
+    function openModal(src) {
+      const modal = document.getElementById("modal");
+      const modalImg = document.getElementById("modalImg");
+      modalImg.src = src;
+      modal.style.display = "flex";
+    }
+
+    function closeModal(e) {
+      // e がクリックイベントなら、×ボタンだけで止める（画像クリック時も閉じる）
+      if (e && e.stopPropagation) e.stopPropagation();
+      document.getElementById("modal").style.display = "none";
     }
   </script>
 </body>
