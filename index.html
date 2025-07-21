@@ -205,14 +205,14 @@
         back: "img/design04_back.png",
       },
     ];
-
+  
     const designsContainer = document.getElementById("designs");
-
+  
     designsData.forEach((item) => {
       const card = document.createElement("div");
       card.className = "card";
       card.dataset.state = "back";
-
+  
       card.innerHTML = `
         <img src="${item.back}" alt="${item.title}" onclick="openModal(this.src)" />
         <h3>${item.title}（裏面）</h3>
@@ -228,36 +228,36 @@
           </svg>
         </div>
       `;
-
+  
       let startX = 0;
-
+  
       card.addEventListener("touchstart", (e) => {
         startX = e.changedTouches[0].screenX;
       });
-
+  
       card.addEventListener("touchend", (e) => {
         const endX = e.changedTouches[0].screenX;
         const diff = endX - startX;
-
+  
         if (Math.abs(diff) > 40) {
           const direction = diff < 0 ? "left" : "right";
           toggleCard(card, item, direction);
         }
       });
-
+  
       designsContainer.appendChild(card);
       updateArrows(card);
     });
-
+  
     function toggleCard(card, data, direction) {
       const isBack = card.dataset.state === "back";
       const img = card.querySelector("img");
       const title = card.querySelector("h3");
-
+  
       img.classList.remove("slide-left", "slide-right");
       void img.offsetWidth;
       img.classList.add(direction === "left" ? "slide-left" : "slide-right");
-
+  
       setTimeout(() => {
         if (isBack) {
           img.src = data.front;
@@ -268,15 +268,15 @@
           title.innerText = `${data.title}（裏面）`;
           card.dataset.state = "back";
         }
-
+  
         img.classList.remove("slide-left", "slide-right");
         img.style.transform = "translateX(0)";
         img.style.opacity = "1";
-
+  
         updateArrows(card);
       }, 200);
     }
-
+  
     function updateArrows(card) {
       const isBack = card.dataset.state === "back";
       const left = card.querySelector(".arrow.left");
@@ -284,19 +284,61 @@
       left.style.display = isBack ? "none" : "block";
       right.style.display = isBack ? "block" : "none";
     }
-
+  
+    // --- モーダル拡大用に追加するコード ---
+    let initialPinchDistance = 0;
+    let currentScale = 1;
+    let imgElement = null;
+  
     function openModal(src) {
       const modal = document.getElementById("modal");
-      const modalImg = document.getElementById("modalImg");
-      modalImg.src = src;
+      imgElement = document.getElementById("modalImg"); // Assign imgElement here
+      imgElement.src = src;
       modal.style.display = "flex";
+  
+      // Reset scale when opening modal
+      currentScale = 1;
+      imgElement.style.transform = `scale(${currentScale})`;
     }
-
+  
     function closeModal(e) {
-      // e がクリックイベントなら、×ボタンだけで止める（画像クリック時も閉じる）
       if (e && e.stopPropagation) e.stopPropagation();
       document.getElementById("modal").style.display = "none";
+      // Reset scale and image element when closing modal
+      imgElement.style.transform = `scale(1)`;
+      currentScale = 1;
+      imgElement = null;
     }
+  
+    // Pinch-to-zoom event handlers
+    document.getElementById("modal").addEventListener("touchstart", (e) => {
+      if (e.touches.length === 2) {
+        initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
+        e.preventDefault(); // Prevent scrolling when pinching
+      }
+    });
+  
+    document.getElementById("modal").addEventListener("touchmove", (e) => {
+      if (e.touches.length === 2 && imgElement) {
+        const currentPinchDistance = getDistance(e.touches[0], e.touches[1]);
+        const scaleFactor = currentPinchDistance / initialPinchDistance;
+        currentScale = Math.max(0.5, Math.min(currentScale * scaleFactor, 4)); // Limit scale between 0.5x and 4x
+        imgElement.style.transform = `scale(${currentScale})`;
+        initialPinchDistance = currentPinchDistance; // Update initial distance for smooth scaling
+        e.preventDefault(); // Prevent scrolling when pinching
+      }
+    });
+  
+    document.getElementById("modal").addEventListener("touchend", () => {
+      initialPinchDistance = 0;
+    });
+  
+    function getDistance(touch1, touch2) {
+      const dx = touch1.clientX - touch2.clientX;
+      const dy = touch1.clientY - touch2.clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+    // --- モーダル拡大用に追加するコードここまで ---
   </script>
 </body>
 </html>
